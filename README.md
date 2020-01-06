@@ -1,5 +1,5 @@
 # creating-LOGOS-database
-An R script selected several columns from several large databases from the Maintain your Brain Trial (MYB) and creating a database for eligable participants and risk factor cut off's based on participant scores
+An R script selected several columns from several large databases from the Maintain your Brain Trial (MYB) and creating a database for eligable participants and risk factor cut off's based on participant scores.
 Protocol can for MYB can be found here (https://content.iospress.com/articles/journal-of-alzheimers-disease/jad180572)
 MYB is a large nationwide (NSW) RCT aiming to improve cognition and prevent decline into dementia (5 years post study) by condcuting online interventions to modifiable risk factors. One of the measured outcomes at baseline and every 3-12 months during the 3 year intervention is an automated episodic memory (EMV) test LOGOS. Standard EMV's are one of the best predictors of decline into dementia. This script aims at looking at what socio-demographic-medical-biological-lifestyle and numerous other factors predict and interact with EMV in a popultation of 4-5000 participants
 This was created by Polly Barr and Sarah Davies. All communication should be directed at to polly.barr@bristol.....
