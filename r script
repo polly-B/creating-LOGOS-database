@@ -1,0 +1,211 @@
+#set working directiory (you will need to change this(to wherever all the folders are on your computer/laptop)
+setwd('~/Dropbox/LOGOS COMBINOMICS/MYB data') 
+setwd("~/Dropbox (Sydney Uni)/LOGOS COMBINOMICS/MYB data")
+setwd("C:/Users/cn19915/Dropbox (Sydney Uni)/LOGOS COMBINOMICS/MYB data/original myb data")
+
+install.packages("data.table")
+
+
+#load all the .csv spreadsheets we will need (look at Combinomics variables.doc for this information). Be sure to give them meaningful names
+library(data.table)
+install.packages("dplyr")
+library(dplyr)
+
+demo <- fread("demos_v2.0_20181018.csv", select = c('id','myb_age','adedu','rc_mybgender')) #add all coloumns from demos needed
+medical <- fread("medh_v1.0_20181018en.csv", select = c('id','everbp','bpmed','everstroke','evertia','everchol','any_Cholmeds','any_diabetes','everha','everangina','everaf'))#a dataset with all the participants baseline medical information (HT, stroke, CAD, Atrial fibrillation, Hypertension, Hypercholesterolemia, Diabetes)
+adri <- fread("adri_v1.0_20181018.csv", select = c('id','bmi','smoking','cesdcesd7'))#a dataset with all the participants baseline Years of Education information (Edu, Sleep, Smoking)
+LEQ <- fread("leq_v1.0_20181018.csv", select = c('id','LangFluent','leqses','LEQScore'))#a dataset with all participants baseline LEQ data (NESB, SES, LEQ)
+Physical <- fread("paqu_v2.1_20181018.csv", select = c('id','V20','rc_cappedTOT_energy','vSPPBtotalscore','HAQWaist'))#a dataset of all participants baseline physical status information (Exercise, Frailty)
+Depression <-fread("myb1_v1.0_20181018en.csv", select = c('id','phq9_totalrc'))#a dataset with all participants baseline information from a depression questionnaire (Depression)
+Diet <- fread("diet_v1.0_20181018en.csv", select = c('id','MEDICULTotal'))#a dataset with all participants baseline diet information (Diet)
+LOGOS <- fread("logos_v2.0_20190918.csv", select = c('id','delayed_recall_total','Invalid'))#make this work for your code. 
+LOGOS=LOGOS[LOGOS$Invalid==0,]#select only not invalid participants
+ppts<-c(LOGOS$id)#lets run this together on your machine
+which(is.na(LEQ$LEQScore))
+LEQ<-LEQ[-c(3039),] # for now remove this participant- Polly to ask Megan why this is
+
+medical$everha<-recode(medical$everha,'N\\/A'= 'No')
+medical$everangina<-recode(medical$everangina,'N\\/A'= 'No')
+medical$everaf<-recode(medical$everaf,'N\\/A'= 'No')
+ 
+#combine all spreadsheets by ID 
+combi<-Reduce(function(x,y) merge(x, y, by = "id", all = TRUE),
+       list(demo,medical,adri,LEQ,Physical,Depression,Diet,LOGOS))# Sarah try this
+mode(combi$leqses)
+
+ppts<-LOGOS$id 
+#select only those participants with id's for ppts (LOGOS$id)
+newdataLOGOS<- filter(combi, (id%in%c(ppts)))#Sarah this works on my computer so it works a hell of a lot easier than below!
+
+#select only those ppt ids that we have complete LOGOS data from. 
+which(is.na(newdataLOGOS$LEQScore)) # there is a lot of missing data (80 ppts) but I think this is ok- perhaps people dropped out or skipped LEQ at baseline, or were dummy participants- check with new data
+
+
+# recode character strings as numeric
+newdataLOGOS$everha<-recode(newdataLOGOS$everha, 'No'=0, 'Yes'=1)
+newdataLOGOS$everbp<-recode(newdataLOGOS$everbp, 'No'=0, 'Yes'=1)
+newdataLOGOS$bpmed<-recode(newdataLOGOS$bpmed, 'No'=0, 'Yes'=1)
+newdataLOGOS$everstroke<-recode(newdataLOGOS$everstroke, 'No'=0, 'Yes'=1)
+newdataLOGOS$evertia<-recode(newdataLOGOS$evertia, 'No'=0, 'Yes'=1)
+newdataLOGOS$everchol<-recode(newdataLOGOS$everchol, 'No'=0, 'Yes'=1)
+newdataLOGOS$everangina<-recode(newdataLOGOS$everangina, 'No'=0, 'Yes'=1)
+newdataLOGOS$everaf<-recode(newdataLOGOS$everaf, 'No'=0, 'Yes'=1)
+newdataLOGOS$smoking<-recode(newdataLOGOS$smoking, 'Never'=0, 'Yes, not currently'=1, 'Yes, currently'=2)
+newdataLOGOS$leqses<-recode(newdataLOGOS$leqses,  'less than $5,000 per year'=1, '$5,000-$9,999 per year'=2, '$10,000 - $19,999 per year'=3,'$20,000-$29,999 per year'=4,'$30,000-$39,999 per year'=5,'$40,000-$49,999 per year'=6,'$50,000-$59,999 per year'=7,'$60,000-$69,999 per year'=8, '$70,000 or more per year'=9)
+newdataLOGOS$cesdcesd7<-recode(newdataLOGOS$cesdcesd7, '5-7 days'=1, '3-4 days'=2, '1-2 days'=3, 'Less than 1 day'=4)
+
+
+#double check there are no missing values.....There shouldn't be
+which(is.na(newdataLOGOS$everbp))
+which(is.na(newdataLOGOS$bpmed))
+which(is.na(newdataLOGOS$everchol))
+which(is.na(newdataLOGOS$any_Cholmeds))
+which(is.na(newdataLOGOS$any_diabetes))
+which(is.na(newdataLOGOS$smoking))
+which(is.na(newdataLOGOS$bmi))
+which(is.na(newdataLOGOS$everha))
+which(is.na(newdataLOGOS$everangina))
+which(is.na(newdataLOGOS$everaf)) 
+which(is.na(newdataLOGOS$delayed_recall_total))
+which(is.na(newdataLOGOS$Invalid))
+which(is.na(newdataLOGOS$leqses))
+which(is.na(newdataLOGOS$V20))
+
+
+#Check which variables are numeric, interger, characters and convert any character categories to numeric
+str(newdataLOGOS)
+
+#convert exercises to numeric columns and then omit any participant with NA values from the dataframe
+#------update: Probalably don't need to do this now we've changed the recode to not be characters!!!--------
+newdataLOGOS$everbp<-as.numeric(newdataLOGOS$everbp)
+newdataLOGOS$bpmed<-as.numeric(newdataLOGOS$bpmed)
+newdataLOGOS$everstroke<-as.numeric(newdataLOGOS$everstroke)
+newdataLOGOS$evertia<-as.numeric(newdataLOGOS$evertia)
+newdataLOGOS$everchol<-as.numeric(newdataLOGOS$everchol)
+newdataLOGOS$everha<-as.numeric(newdataLOGOS$everha)
+newdataLOGOS$everangina<-as.numeric(newdataLOGOS$everangina)
+newdataLOGOS$everaf<-as.numeric(newdataLOGOS$everaf)
+newdataLOGOS$LangFluent<-as.numeric(newdataLOGOS$LangFluent)
+newdataLOGOS$leqses<-as.numeric(newdataLOGOS$leqses)
+newdataLOGOS$cesdcesd7<-as.numeric(newdataLOGOS$cesdcesd7)
+newdataLOGOS$rc_mybgender<-as.numeric(newdataLOGOS$rc_mybgender)
+
+#???????????????do we want to delete 'problem participants'?????????
+
+#make this into a new csv file 
+write.csv(newdataLOGOS, file = "LogosRF2.csv")
+
+#create CVRF composit from relevant variables (Noted later~line 90)
+#Firstly, execute ifelse command on all relevant CVRF variables (everbp+dpmed,everchol+any_cholmeds,everha+everangina,any_diabetes,smoking,bmi) in order to make them binary, note what the binary values mean
+#in sum- you  need to create new variables for the risk factors that are based on more than one variable and which aren't already binary (e.g. bmi)
+#CVRF1_HT
+newdataLOGOS$CVRF1_HT<-ifelse((newdataLOGOS$everbp + newdataLOGOS$bpmed)>0, 1,0) 
+#if everbp plus bpmed equals more than 0 print  1, otherwise print 0
+
+#CVRF2_Chol
+newdataLOGOS$CVRF2_HC<-ifelse((newdataLOGOS$everchol+newdataLOGOS$any_Cholmeds)>0,1,0)
+#if everchol plus any_Cholmeds equals more than 0 print  1, otherwise print 0
+
+#CVRF3_CAD
+newdataLOGOS$CVRF3_CAD<-ifelse((newdataLOGOS$everha+newdataLOGOS$everangina)>0,1,0)
+#if everha plus everangina equals more than 0 print  1, otherwise print 0
+
+#CVRF4_Diabetes
+newdataLOGOS$CVRF4_diabetes<-ifelse((newdataLOGOS$any_diabetes)>0,1,0)
+#if any_diabetes is greater than 0 print 1, otherwise, print 0
+
+#CVRF5_Smoking
+newdataLOGOS$CVRF5_Smoking<-ifelse((newdataLOGOS$smoking)>0,1,0)
+# if never  =0, if currently or yes but not currently = 1
+
+#CVRF6_bmi
+newdataLOGOS$CVRF6_bmi<-ifelse((newdataLOGOS$bmi)>29,1,0)
+#if bmi>29 = 1, any other bmi = 0
+
+#CVRF7_arterial fibrillation
+newdataLOGOS$CVRF7_everaf<-newdataLOGOS$everaf
+
+#Now you are able to create CVRF composite score column from following variables:HT+HC+diabetes_binary+Smoking_binary+bmi_binary+CAD+everaf 
+newdataLOGOS$CVRF<- rowSums (newdataLOGOS[,c("CVRF7_everaf","CVRF6_bmi","CVRF5_Smoking","CVRF4_diabetes","CVRF3_CAD",  "CVRF2_HC", "CVRF1_HT")], na.rm=TRUE) #continious (i.e out of 7)
+newdataLOGOS$CVRF_COMBINED_binary<-ifelse((newdataLOGOS$CVRF1_HT+newdataLOGOS$CVRF2_HC+newdataLOGOS$CVRF3_CAD+newdataLOGOS$CVRF4_diabetes+newdataLOGOS$CVRF5_Smoking+newdataLOGOS$CVRF6_bmi+newdataLOGOS$CVRF7_everaf)>=4, 1,0) #(binary)
+                             
+#RF1_age
+#medage<-
+medage<-median(newdataLOGOS$myb_age, na.rm = TRUE)
+newdataLOGOS$RF1_age<-ifelse(newdataLOGOS$myb_age>=medage,1,0)
+newdataLOGOS$RF1_age<-ifelse(newdataLOGOS$myb_age>=64,1,0)
+
+#RF2_sex
+newdataLOGOS$RF2_Sex<-recode(newdataLOGOS$rc_mybgender, '2'=0, '1'=1) #do we want to recode as female=low risk therefore =0 and males = high risk and therefore= 1
+#1=male, 0=female
+
+#RF3_education
+mededu<-median(newdataLOGOS$adedu, na.rm=TRUE)
+newdataLOGOS$RF3_education<-ifelse(newdataLOGOS$adedu<=mededu,1,0) #high risk (i.e. low ed)= 1, low risk (i.e. high ed)=0
+#newdataLOGOS$RF3_education<-ifelse(newdataLOGOS$adedu<=11,1,
+                                   #ifelse(newdataLOGOS$adedu>=16,2,0))
+View(newdataLOGOS$RF4_NESB)
+#RF4_NESB
+#nesb<-median(newdataLOGOS$LangFluent, na.rm = TRUE)
+newdataLOGOS$RF4_NESB<-ifelse(newdataLOGOS$LangFluent>=18,1,0)
+median(na.omit(newdataLOGOS$RF4_NESB))
+
+#RF5_SES
+medSES<-median(newdataLOGOS$leqses, na.rm=TRUE)
+newdataLOGOS$RF5_SES<-ifelse(newdataLOGOS$leqses<medSES,1,0)
+
+
+#RF6_Exercise
+#number of days of exercise (<2)+amount of energy expenditure(<1000)=high risk
+medEX<-median(newdataLOGOS$V20, na.rm = TRUE)
+meanEX<-mean(newdataLOGOS$V20, na.rm = TRUE)
+newdataLOGOS$RF6_Exercise<-ifelse(newdataLOGOS$V20< 2 & newdataLOGOS$rc_cappedTOT_energy<1000,1,0)
+
+#RF7_Frailty
+medFrail<-median(newdataLOGOS$vSPPBtotalscore, na.rm = TRUE)
+newdataLOGOS$RF7_Frailty<-ifelse(newdataLOGOS$vSPPBtotalscore>=medFrail,1,0)
+
+#RF8_sleep
+sleepMedian<-median(newdataLOGOS$cesdcesd7, na.rm= TRUE)
+newdataLOGOS$RF8_Sleep<-ifelse(newdataLOGOS$cesdcesd7>=sleepMedian,1,0)
+
+#RF9_LEQ
+medLEQ<-median(newdataLOGOS$LEQScore, na.rm = TRUE)
+newdataLOGOS$RF9_LEQ<-ifelse(newdataLOGOS$LEQ<medLEQ,1,0)
+
+#RF10_Depression
+medDep<-median(newdataLOGOS$phq9_totalrc, na.rm = TRUE)
+range(newdataLOGOS$phq9_totalrc)
+newdataLOGOS$RF10_Depression<-ifelse(newdataLOGOS$phq9_totalrc>medDep,1,0)
+#newdataLOGOS$RF10_Depression_clinical<-ifelse(newdataLOGOS$phq9_totalrc>=4,1,0)
+quantile(newdataLOGOS$phq9_totalrc)
+View(medDep)
+#RF11_Stroke
+newdataLOGOS$RF11_stroke<-ifelse((newdataLOGOS$everstroke+newdataLOGOS$evertia)>0,1,0)
+
+#RF12_Diet
+medDiet<-median(newdataLOGOS$MEDICULTotal, na.rm = TRUE)
+#median = 53
+newdataLOGOS$RF12_Diet<-ifelse(newdataLOGOS$MEDICULTotal<medDiet,1,0)
+#newdataLOGOS$RF12_Diet_clinical<-ifelse(newdataLOGOS$MEDICULTotal>=81,1,0)
+
+#RF13_Over Nutrition: N.B. When working out the clinical one need to do it for each gender (if else)
+medNut<-median(newdataLOGOS$HAQWaist, na.rm = TRUE)
+newdataLOGOS$RF13_OverNutrition<-ifelse(newdataLOGOS$HAQWaist>=medNut,1,0)
+
+write.csv(newdataLOGOS, file="LOGOSriskfactors.csv")
+
+
+#Hence there is RF_1-13 and CVRF_1-7 + CVRF_COMBINED... 21 RFs all together
+regression <- lm(newdataLOGOS$delayed_recall_total~newdataLOGOS$myb_age +newdataLOGOS$RF2_Sex+newdataLOGOS$adedu )
+summary(regression)
+#___________________________________________________________________________________________________________________________
+
+
+#how many participants had 2-3 modules allocated 
+eligability <- fread("NoGpstatus_v2.0_20181018.csv", select = c('id','myb_status','module_count','rc_mybgender')) #add all coloumns from no gp needed
+eligability=eligability[eligability$myb_status=='Eligible',]
+eligability2=eligability[eligability$module_count!=0,]
+eligability2=eligability[eligability$module_count!=4,]
+(5220/6213)*100
+5220-6213
